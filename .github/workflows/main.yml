@@ -1,4 +1,4 @@
-name: Build and Push Docker Image
+name: Build and Deploy to AKS
 
 on:
   push:
@@ -6,7 +6,7 @@ on:
       - main
 
 jobs:
-  build:
+  build-deploy:
     runs-on: ubuntu-latest
 
     steps:
@@ -21,3 +21,21 @@ jobs:
 
     - name: Push Docker image
       run: docker push ${{ secrets.DOCKER_USERNAME }}/flask-app:latest
+
+    # 🔵 NEW: Azure Login
+    - name: Azure Login
+      uses: azure/login@v1
+      with:
+        creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+    # 🔵 NEW: Set AKS context
+    - name: Set AKS context
+      uses: azure/aks-set-context@v3
+      with:
+        resource-group: myRG
+        cluster-name: myAKSCluster
+
+    # 🔵 NEW: Deploy to Kubernetes
+    - name: Deploy to AKS
+      run: |
+        kubectl apply -f deployment.yaml
